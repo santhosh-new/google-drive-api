@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const {google} = require('googleapis');
 const path = require('path');
 const fs = require('fs');
+const { response } = require('express');
   /* Imports end */
 
 /** App declaration start */
@@ -29,6 +30,15 @@ app.listen(process.env.PORT,()=>{console.log("app is running")});
 app.get('/test',(request, response)=> { 
     response.json({success:true, message: 'server is running'})
 });
+
+app.get('/upload-file',async (request, response)=> { 
+  const fileStatus = await uploadFile();
+  if(fileStatus.status === 200) { 
+    response.json({success: true, message: 'file uploaded successfully!', data: fileStatus})
+  } else { 
+    response.json({success: false, message: 'unable to upload file', data: fileStatus})
+  }
+});
 /** Routes end */
 
 /** Google drive const start */
@@ -48,7 +58,7 @@ const drive = google.drive({
 /** OAuth2 client configuration end */
 
 /** Defining file path start */
-const filepath = path;
+const filepath = path.join(__dirname, 'sample.jpg');
 var fileMetadata = {
     'name': 'Sample',
     'mimeType': 'image/jpg'
@@ -61,16 +71,18 @@ var fileMetadata = {
 
 /** File manipluation functions start */
 
-async function uploadFile() { 
+async function uploadFile() {
+  let result = ''; 
     try {
         const apiResponse = await drive.files.create({requestBody:fileMetadata, media: media});
-        console.log(apiResponse);
+        result = apiResponse;
     } catch (error) {
-        console.log(error);
+        result = error;
     }
+    return result;
 }
 
-uploadFile();
+// uploadFile();
 
 /** File manipluation functions end */
 
