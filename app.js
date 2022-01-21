@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 const {google} = require('googleapis');
 const path = require('path');
 const fs = require('fs');
-const { response } = require('express');
+const multer = require('multer');
   /* Imports end */
 
 /** App declaration start */
@@ -39,6 +39,25 @@ app.get('/upload-file',async (request, response)=> {
     response.json({success: false, message: 'unable to upload file', data: fileStatus})
   }
 });
+
+/** Upload the files to the 'uploads' directory start */
+const destination = (req, file, cb) => { cb(null, 'uploads/') } // File storage location
+const filename = (req, file, cb) => { cb(null, `${file.fieldname}-${Date.now()}.png` ) }
+const storage = multer.diskStorage({destination: destination, filename: filename})
+const upload = multer({storage: storage}).single('test');
+/** Upload the files to the 'uploads' directory end  */
+
+/**  */
+
+app.post('/upload', (request, response, next) => { 
+  upload(request, response, (err) => {
+    if(err instanceof multer.MulterError) { 
+      response.json({success: false, message: 'File upload failed!', data: err});
+    } else { 
+      response.json({success: true, message: 'File has uploaded successfully!'});
+    }
+  })
+})
 /** Routes end */
 
 /** Google drive const start */
